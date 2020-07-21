@@ -1,3 +1,22 @@
-# monitor-calls-asterisk-with-prometheus-grafana-use-asterisk_exporter
-Tham khảo code:
-https://github.com/hocchudong/ghichep-prometheus/tree/master/mysql%20exporter%20python
+asterisk exporter
+===================
+
+## Description
+Montior calls in the asterisk core, include: active calls, active channels, call processed 
+
+## Setup
+- do you have to install python3.4
+
+- Install prometheus module
+```
+$ pip3.4 install prometheus
+```
+
+- Run it:
+
+```
+$ python3.4 asterisk_exporter.py
+```
+
+- Go to http://127.0.0.1:9200/metrics or http://IP:9200/metrics
+
