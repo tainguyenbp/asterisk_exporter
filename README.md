@@ -19,11 +19,12 @@ $ python3.4 asterisk_exporter.py
 ```
 
 - Go to http://127.0.0.1:9200/metrics or http://IP:9200/metrics
+
 - Add config to prometheus.yml file:
 ```
-$   - job_name: 'asterisk_exporter'
-$    scrape_interval: 30s
-$    scrape_timeout: 30s
-$    static_configs:
-$    - targets: ['192.168.11.115:9200']
+   - job_name: 'asterisk_exporter'
+    scrape_interval: 30s
+    scrape_timeout: 30s
+    static_configs:
+    - targets: ['192.168.11.115:9200']
 ```
