@@ -22,7 +22,7 @@ $ python3.4 asterisk_exporter.py
 
 - Add config to prometheus.yml file:
 ```
-   - job_name: 'asterisk_exporter'
+  - job_name: 'asterisk_exporter'
     scrape_interval: 30s
     scrape_timeout: 30s
     static_configs:
