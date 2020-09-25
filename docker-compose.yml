@@ -1,0 +1,10 @@
+version: '2'
+services:
+  asterisk_exporter:
+    build:
+      context: .
+    image: asterisk_exporter/tainguyenbp:v1.0.0
+    container_name: asterisk_exporter
+    restart: always
+    ports:
+      - 9200:9200
