@@ -6,14 +6,11 @@ command_core_show_channels= [ "/usr/sbin/asterisk -rx 'core show channels' | awk
 
 for core_show_channels in command_core_show_channels:
     array = os.popen(core_show_channels).readlines()
-    print(array)
-
-    channel = array[0].rstrip()
+    
     active_channels = array[1].rstrip()
     active_calls = array[2].rstrip()
     calls_processed = array[3].rstrip()
     
-    print("channel: "+channel)
     print("active calls: "+active_calls)
     print("active channels: "+active_channels)
     print("calls processed: "+calls_processed)

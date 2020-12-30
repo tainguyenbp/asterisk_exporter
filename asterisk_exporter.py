@@ -13,17 +13,17 @@ from prometheus.collectors import Gauge
 from prometheus.registry import Registry
 from prometheus.exporter import PrometheusMetricHandler
 
-PORT_NUMBER = 9200
+PORT_NUMBER = 9255
 
 def gather_data(registry):
     """Gathers the metrics"""
     host = socket.gethostname()
 
-    asterisk_total_active_channels_metric = Gauge("asterisk_active_channels", "Total current acitve channels",
+    asterisk_total_active_channels_metric = Gauge("asterisk_total_active_channels_metric", "Total current acitve channels",
                        {'host': host})
-    asterisk_total_active_calls_metric = Gauge("asterisk_active_calls", "Total current acitve calls",
+    asterisk_total_active_calls_metric = Gauge("asterisk_total_active_calls_metric", "Total current acitve calls",
                        {'host': host})
-    asterisk_total_calls_processed_metric = Gauge("asterisk_calls_processed", "Total current calls processed",
+    asterisk_total_calls_processed_metric = Gauge("asterisk_total_calls_processed_metric", "Total current calls processed",
                        {'host': host})
 
     registry.register(asterisk_total_active_calls_metric)
@@ -47,17 +47,14 @@ def gather_data(registry):
         # asterisk_total_calls_processed_metric.set({'type': "calls processed", }, calls_processed)
 
         for core_show_channels in command_core_show_channels:
-            sstdin , stdout, stderr = os.popen(core_show_channels)
-            array = stdout.readlines()
+            array = os.popen(core_show_channels).readlines()
 
             active_channels = array[1].rstrip()
             active_calls = array[2].rstrip()
             calls_processed = array[3].rstrip()
 
             asterisk_total_active_channels_metric.set({'type': "active channels", }, active_channels)
-
             asterisk_total_active_calls_metric.set({'type': "active calls", }, active_calls)
-
             asterisk_total_calls_processed_metric.set({'type': "calls processed", }, calls_processed)
 
 
