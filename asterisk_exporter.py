@@ -8,6 +8,7 @@ import threading
 from http.server import HTTPServer
 import socket
 import time
+import re
 
 from prometheus.collectors import Gauge
 from prometheus.registry import Registry
@@ -31,6 +32,16 @@ def gather_data(registry):
     asterisk_last_reload_seconds_metric = Gauge("asterisk_last_reload_seconds_metric", "last reload",
                        {'host': host})
 
+    asterisk_total_sip_peers_metric = Gauge("asterisk_total_sip_peers_metric", "ip peers",
+                       {'host': host})
+    asterisk_total_monitored_online_metric = Gauge("asterisk_total_monitored_online_metric", "monitored online",
+                       {'host': host})
+    asterisk_total_monitored_offline_metric = Gauge("asterisk_total_monitored_offline_metric", "monitored_offline",
+                       {'host': host})
+    asterisk_total_unmonitored_online_metric = Gauge("asterisk_total_unmonitored_online_metric", "unmonitored_online",
+                       {'host': host})
+    asterisk_total_unmonitored_offline_metric = Gauge("asterisk_total_unmonitored_offline_metric", "unmonitored offline",
+                       {'host': host})
 
     registry.register(asterisk_total_active_calls_metric)
     registry.register(asterisk_total_active_channels_metric)
@@ -39,10 +50,17 @@ def gather_data(registry):
     registry.register(asterisk_system_uptime_seconds_metric)
     registry.register(asterisk_last_reload_seconds_metric)
 
+    registry.register(asterisk_total_sip_peers_metric)
+    registry.register(asterisk_total_monitored_online_metric)
+    registry.register(asterisk_total_monitored_offline_metric)
+    registry.register(asterisk_total_unmonitored_online_metric)
+    registry.register(asterisk_total_unmonitored_offline_metric)
+
     while True:
         time.sleep(1)
-        command_core_show_channels= [ "/usr/sbin/asterisk -rx 'core show channels' | awk '{print $1}'" ]
-        command_core_show_uptime= [ "/usr/sbin/asterisk -rx 'core show uptime seconds' | awk '{print $3}'" ]
+        command_core_show_channels = [ "/usr/sbin/asterisk -rx 'core show channels' | awk '{print $1}'" ]
+        command_core_show_uptime = [ "/usr/sbin/asterisk -rx 'core show uptime seconds' | awk '{print $3}'" ]
+        command_sip_show_peers = "asterisk -rx 'sip show peers' | grep 'sip peers' | grep 'Monitored' | grep 'Unmonitored'"
         # command_active_channels = "asterisk -rx 'core show channels' | grep 'active channels' | awk '{print $1}'"
         # command_active_calls = "asterisk -rx 'core show channels' | grep 'active calls' | awk '{print $1}'"
         # command_calls_processed = "asterisk -rx 'core show channels' | grep 'calls processed' | awk '{print $1}'"
@@ -74,8 +92,16 @@ def gather_data(registry):
             last_reload = array_core_show_uptime[1].rstrip()
 
             asterisk_system_uptime_seconds_metric.set({'type': "system uptime seconds", }, active_channels)
-            asterisk_last_reload_seconds_metric.set({'type': "last reload seconds", }, active_calls)       
-
+            asterisk_last_reload_seconds_metric.set({'type': "last reload seconds", }, active_calls) 
+              
+        sip_show_peers = os.popen(command_sip_show_peers).read()
+        [sip_peers, monitored_online, monitored_offline, unmonitored_online, unmonitored_offline] = re.findall("\d+", sip_show_peers)
+        asterisk_total_sip_peers_metric.set({'type': "total sip peers", }, sip_peers)
+        asterisk_total_monitored_online_metric.set({'type': "total monitored online", }, monitored_online)
+        asterisk_total_monitored_offline_metric.set({'type': "total monitored_offline", }, monitored_offline)
+        asterisk_total_unmonitored_online_metric.set({'type': "total unmonitored_online", }, unmonitored_online)
+        asterisk_total_unmonitored_offline_metric.set({'type': "total unmonitored offline", }, unmonitored_offline)
+        
 if __name__ == "__main__":
 
     registry = Registry()
