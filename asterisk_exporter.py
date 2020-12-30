@@ -32,19 +32,34 @@ def gather_data(registry):
 
     while True:
         time.sleep(1)
+        command_core_show_channels= [ "/usr/sbin/asterisk -rx 'core show channels' | awk '{print $1}'" ]
+        # command_active_channels = "asterisk -rx 'core show channels' | grep 'active channels' | awk '{print $1}'"
+        # command_active_calls = "asterisk -rx 'core show channels' | grep 'active calls' | awk '{print $1}'"
+        # command_calls_processed = "asterisk -rx 'core show channels' | grep 'calls processed' | awk '{print $1}'"
 
-        command_active_channels = "asterisk -rx 'core show channels' | grep 'active channels' | awk '{print $1}'"
-        command_active_calls = "asterisk -rx 'core show channels' | grep 'active calls' | awk '{print $1}'"
-        command_calls_processed = "asterisk -rx 'core show channels' | grep 'calls processed' | awk '{print $1}'"
+        # active_channels = os.popen(command_active_channels).read()
+        # asterisk_total_active_channels_metric.set({'type': "active channels", }, active_channels)
 
-        active_channels = os.popen(command_active_channels).read()
-        asterisk_total_active_channels_metric.set({'type': "active channels", }, active_channels)
+        # active_calls = os.popen(command_active_calls).read()
+        # asterisk_total_active_calls_metric.set({'type': "active calls", }, active_calls)
 
-        active_calls = os.popen(command_active_calls).read()
-        asterisk_total_active_calls_metric.set({'type': "active calls", }, active_calls)
+        # calls_processed = os.popen(command_calls_processed).read()
+        # asterisk_total_calls_processed_metric.set({'type': "calls processed", }, calls_processed)
 
-        calls_processed = os.popen(command_calls_processed).read()
-        asterisk_total_calls_processed_metric.set({'type': "calls processed", }, calls_processed)
+        for core_show_channels in command_core_show_channels:
+            sstdin , stdout, stderr = os.popen(core_show_channels)
+            array = stdout.readlines()
+
+            active_channels = array[1].rstrip()
+            active_calls = array[2].rstrip()
+            calls_processed = array[3].rstrip()
+
+            asterisk_total_active_channels_metric.set({'type': "active channels", }, active_channels)
+
+            asterisk_total_active_calls_metric.set({'type': "active calls", }, active_calls)
+
+            asterisk_total_calls_processed_metric.set({'type': "calls processed", }, calls_processed)
+
 
 if __name__ == "__main__":
 
