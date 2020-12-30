@@ -26,13 +26,23 @@ def gather_data(registry):
     asterisk_total_calls_processed_metric = Gauge("asterisk_total_calls_processed_metric", "Total current calls processed",
                        {'host': host})
 
+    asterisk_system_uptime_seconds_metric = Gauge("asterisk_system_uptime_seconds_metric", "system uptime",
+                       {'host': host})
+    asterisk_last_reload_seconds_metric = Gauge("asterisk_last_reload_seconds_metric", "last reload",
+                       {'host': host})
+
+
     registry.register(asterisk_total_active_calls_metric)
     registry.register(asterisk_total_active_channels_metric)
     registry.register(asterisk_total_calls_processed_metric)
 
+    registry.register(asterisk_system_uptime_seconds_metric)
+    registry.register(asterisk_last_reload_seconds_metric)
+
     while True:
         time.sleep(1)
         command_core_show_channels= [ "/usr/sbin/asterisk -rx 'core show channels' | awk '{print $1}'" ]
+        command_core_show_uptime= [ "/usr/sbin/asterisk -rx 'core show uptime seconds' | awk '{print $3}'" ]
         # command_active_channels = "asterisk -rx 'core show channels' | grep 'active channels' | awk '{print $1}'"
         # command_active_calls = "asterisk -rx 'core show channels' | grep 'active calls' | awk '{print $1}'"
         # command_calls_processed = "asterisk -rx 'core show channels' | grep 'calls processed' | awk '{print $1}'"
@@ -47,16 +57,24 @@ def gather_data(registry):
         # asterisk_total_calls_processed_metric.set({'type': "calls processed", }, calls_processed)
 
         for core_show_channels in command_core_show_channels:
-            array = os.popen(core_show_channels).readlines()
+            array_core_show_channels = os.popen(core_show_channels).readlines()
 
-            active_channels = array[1].rstrip()
-            active_calls = array[2].rstrip()
-            calls_processed = array[3].rstrip()
+            active_channels = array_core_show_channels[1].rstrip()
+            active_calls = array_core_show_channels[2].rstrip()
+            calls_processed = array_core_show_channels[3].rstrip()
 
             asterisk_total_active_channels_metric.set({'type': "active channels", }, active_channels)
             asterisk_total_active_calls_metric.set({'type': "active calls", }, active_calls)
             asterisk_total_calls_processed_metric.set({'type': "calls processed", }, calls_processed)
 
+        for core_show_uptime in command_core_show_uptime:
+            array_core_show_uptime = os.popen(core_show_uptime).readlines()
+
+            system_uptime = array_core_show_uptime[0].rstrip()
+            last_reload = array_core_show_uptime[1].rstrip()
+
+            asterisk_system_uptime_seconds_metric.set({'type': "system uptime seconds", }, active_channels)
+            asterisk_last_reload_seconds_metric.set({'type': "last reload seconds", }, active_calls)       
 
 if __name__ == "__main__":
 
