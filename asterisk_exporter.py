@@ -36,11 +36,18 @@ def gather_data(registry):
                        {'host': host})
     asterisk_total_monitored_online_metric = Gauge("asterisk_total_monitored_online_metric", "monitored online",
                        {'host': host})
-    asterisk_total_monitored_offline_metric = Gauge("asterisk_total_monitored_offline_metric", "monitored_offline",
+    asterisk_total_monitored_offline_metric = Gauge("asterisk_total_monitored_offline_metric", "monitored offline",
                        {'host': host})
-    asterisk_total_unmonitored_online_metric = Gauge("asterisk_total_unmonitored_online_metric", "unmonitored_online",
+    asterisk_total_unmonitored_online_metric = Gauge("asterisk_total_unmonitored_online_metric", "unmonitored online",
                        {'host': host})
     asterisk_total_unmonitored_offline_metric = Gauge("asterisk_total_unmonitored_offline_metric", "unmonitored offline",
+                       {'host': host})
+
+    asterisk_total_threads_listed_metric = Gauge("asterisk_total_threads_metric", "total threads listed",
+                       {'host': host})
+    asterisk_total_sip_status_unknown_metric = Gauge("asterisk_total_sip_status_unknown_metric", "total sip status unknown",
+                       {'host': host})
+    asterisk_total_sip_status_qualified_metric = Gauge("asterisk_total_sip_status_qualified_metric", "total sip status qualified",
                        {'host': host})
 
     registry.register(asterisk_total_active_calls_metric)
@@ -56,11 +63,19 @@ def gather_data(registry):
     registry.register(asterisk_total_unmonitored_online_metric)
     registry.register(asterisk_total_unmonitored_offline_metric)
 
+    registry.register(asterisk_total_threads_listed_metric)
+    registry.register(asterisk_total_sip_status_unknown_metric)
+    registry.register(asterisk_total_sip_status_qualified_metric)
+
     while True:
         time.sleep(1)
         command_core_show_channels = [ "/usr/sbin/asterisk -rx 'core show channels' | awk '{print $1}'" ]
         command_core_show_uptime = [ "/usr/sbin/asterisk -rx 'core show uptime seconds' | awk '{print $3}'" ]
-        command_sip_show_peers = "asterisk -rx 'sip show peers' | grep 'sip peers' | grep 'Monitored' | grep 'Unmonitored'"
+        command_sip_show_peers = "/usr/sbin/asterisk -rx 'sip show peers' | grep 'sip peers' | grep 'Monitored' | grep 'Unmonitored'"
+        command_core_show_threads = "/usr/sbin/asterisk -rx 'core show threads' | tail -1 | cut -d' ' -f1"
+        command_sip_show_peers_status_unknown = "/usr/sbin/asterisk -rx 'sip show peers' | grep -P '^\d{3,}.*UNKNOWN\s' | wc -l"
+        command_sip_show_peers_status_qualified = "/usr/sbin/asterisk -rx 'sip show peers' | grep -P '^\d{3,}.*OK\s\(\d+' | wc -l"
+        
         # command_active_channels = "asterisk -rx 'core show channels' | grep 'active channels' | awk '{print $1}'"
         # command_active_calls = "asterisk -rx 'core show channels' | grep 'active calls' | awk '{print $1}'"
         # command_calls_processed = "asterisk -rx 'core show channels' | grep 'calls processed' | awk '{print $1}'"
@@ -102,6 +117,15 @@ def gather_data(registry):
         asterisk_total_unmonitored_online_metric.set({'type': "total unmonitored_online", }, unmonitored_online)
         asterisk_total_unmonitored_offline_metric.set({'type': "total unmonitored offline", }, unmonitored_offline)
         
+        core_show_threads = os.popen(command_core_show_threads).read()
+        asterisk_total_threads_listed_metric.set({'type': "total threads listed", }, core_show_threads)
+
+        sip_show_peers_status_unknown = os.popen(command_sip_show_peers_status_unknown).read()
+        asterisk_total_sip_status_unknown_metric.set({'type': "total sip status unknown", }, sip_show_peers_status_unknown)
+
+        sip_show_peers_status_qualified = os.popen(command_sip_show_peers_status_qualified).read()
+        asterisk_total_sip_status_qualified_metric.set({'type': "total sip status qualified", }, sip_show_peers_status_qualified)
+
 if __name__ == "__main__":
 
     registry = Registry()
