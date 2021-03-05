@@ -1,0 +1,13 @@
+name: ci-prometheus
+on:
+  push:
+    branches: master
+jobs:
+  build:
+    runs-on: [ self-hosted ]
+      - name: test hello work
+        run:  df -h
+  deploy:
+    runs-on: [ self-hosted ]
+      - name: Run a one-line script
+        run: echo "testing ci!"
